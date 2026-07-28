@@ -2,6 +2,11 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="관람기록">
+<meta name="theme-color" content="#ffffff">
 <title>관람기록</title>
 <style>
 :root{
@@ -28,12 +33,12 @@ h1{font-size:24px;margin:8px 0 18px;letter-spacing:-.5px}
 .calhead b{font-size:20px}
 .nav{background:var(--surf2);border:0;color:var(--tx);font-size:22px;width:46px;height:46px;border-radius:14px}
 .dow{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-bottom:4px}
-.dow div{text-align:center;font-size:12px;color:var(--mut);padding:4px 0}
+.dow div{text-align:center;font-size:14px;color:var(--mut);padding:5px 0}
 .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}
 .cell{aspect-ratio:1/1.6;background:var(--bg);border-radius:0;position:relative;overflow:hidden;border:0;padding:0}
 .cell.out{opacity:.35}
 /* 날짜 숫자는 흰 배경 위에서도, 포스터 위에서도 읽혀야 하므로 반투명 흰 칩을 깐다 */
-.cell .n{position:absolute;top:2px;left:4px;font-size:11px;font-weight:700;color:var(--tx);z-index:2}
+.cell .n{position:absolute;top:2px;left:4px;font-size:13px;font-weight:700;color:var(--tx);z-index:2}
 .cell .imgs{position:absolute;inset:0;display:flex}
 .cell .imgs.v{flex-direction:column}
 .cell .imgs>i{flex:1;background-size:cover;background-position:center;background-color:var(--surf2)}
@@ -41,7 +46,7 @@ h1{font-size:24px;margin:8px 0 18px;letter-spacing:-.5px}
 label{display:block;font-size:13px;color:var(--mut);margin:14px 0 6px}
 /* 입력 폼: 항목명과 입력칸을 한 줄에 배치해 스크롤을 줄인다 */
 .fr{display:flex;align-items:center;gap:10px;margin-top:10px}
-.fr>label{flex:none;width:56px;margin:0;font-size:13px;color:var(--mut);line-height:1.3}
+.fr>label{flex:none;width:60px;margin:0;font-size:15px;color:var(--mut);line-height:1.3}
 .fr>input,.fr>select,.fr>textarea,.fr>.dtrow,.fr>.drop,.fr>.qt{flex:1;min-width:0;margin:0}
 .fr.top{align-items:flex-start}
 .fr.top>label{padding-top:16px}
@@ -65,6 +70,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .btn.dan{background:var(--danbg);color:var(--dan)}
 .fab{position:fixed;right:calc(50% - 260px + 16px);bottom:96px;width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;border:0;font-size:32px;z-index:40;box-shadow:0 6px 18px #2f63e840}
 @media(max-width:552px){.fab{right:16px}}
+/* 홈 화면 앱(standalone)은 사파리 하단 바가 없어 여백이 과하게 남는다. 탭바를 위로 올린다 */
+@media(display-mode:standalone){
+  .tabs button{padding:13px 0}
+  body{padding-bottom:74px}
+  .fab{bottom:82px}
+}
 .modal{position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;display:none}
 .modal.on{display:block}
 .mbox{max-width:520px;margin:0 auto;padding:20px 16px 40px}
@@ -89,7 +100,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .hero{display:block;max-width:100%;max-height:37vh;width:auto;margin:0 auto 12px;border-radius:14px;background:var(--surf2)}
 .dtitle{font-size:19px;font-weight:700;text-align:center;margin:0 0 10px;line-height:1.35;word-break:break-all}
 .row{display:flex;padding:9px 2px;border-bottom:1px solid var(--line2);font-size:15px;gap:12px}
-.row span{color:var(--mut);flex:none;width:56px}
+.row span{color:var(--mut);flex:none;width:60px}
 .row b{font-weight:600;text-align:left;word-break:break-all;flex:1;min-width:0}
 .drop{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--mut);font-size:15px}
 .drop.has{padding:10px}
