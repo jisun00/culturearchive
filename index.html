@@ -70,16 +70,12 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .btn.dan{background:var(--danbg);color:var(--dan)}
 .fab{position:fixed;right:calc(50% - 260px + 16px);bottom:96px;width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;border:0;font-size:32px;z-index:40;box-shadow:0 6px 18px #2f63e840}
 @media(max-width:552px){.fab{right:16px}}
-/* 홈 화면 앱은 사파리 하단 바가 없어 여백이 과하게 남는다. 탭바를 위로 올린다.
-   iOS는 display-mode 미디어쿼리가 안 잡히는 경우가 있어 navigator.standalone으로도 판정한다(.pwa) */
-@media(display-mode:standalone){
-  .tabs button{padding:11px 0}
-  body{padding-bottom:66px}
-  .fab{bottom:74px}
-}
-.pwa .tabs button{padding:11px 0}
-.pwa body{padding-bottom:66px}
-.pwa .fab{bottom:74px}
+/* 홈 화면 앱(.pwa)은 사파리 하단 툴바가 없어 탭바가 화면 맨 아래에 붙는다.
+   아래 여백을 키워 글자를 위로 올린다. 높이 조절은 --lift 한 값만 바꾸면 된다 */
+.pwa{--lift:20px}
+.pwa .tabs button{padding:16px 0 calc(22px + var(--lift))}
+.pwa body{padding-bottom:calc(88px + var(--lift))}
+.pwa .fab{bottom:calc(96px + var(--lift))}
 .modal{position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;display:none}
 .modal.on{display:block}
 .mbox{max-width:520px;margin:0 auto;padding:20px 16px 40px}
