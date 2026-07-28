@@ -1,0 +1,599 @@
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>관람기록</title>
+<style>
+:root{
+  --bg:#ffffff;      /* 페이지 배경 */
+  --surf:#f5f7fa;    /* 카드·패널 */
+  --surf2:#e8ecf3;   /* 보조 버튼·트랙 */
+  --line:#d9e0ea;    /* 입력 테두리 */
+  --line2:#edf0f5;   /* 구분선 */
+  --tx:#171a20;      /* 본문 */
+  --tx2:#454d5c;     /* 보조 본문 */
+  --mut:#5c6473;     /* 라벨 */
+  --mut2:#7b8393;    /* 흐린 글씨 */
+  --acc:#2f63e8;     /* 강조 */
+  --dan:#c0344a; --danbg:#fdeaee;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;background:var(--bg);color:var(--tx);padding-bottom:88px}
+.wrap{max-width:520px;margin:0 auto;padding:16px}
+h1{font-size:24px;margin:8px 0 18px;letter-spacing:-.5px}
+.tabs{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--bg);border-top:1px solid var(--line);z-index:50}
+.tabs button{flex:1;background:none;border:0;color:var(--mut);font-size:14px;font-weight:600;padding:16px 0 22px;font-family:inherit}
+.tabs button.on{color:var(--acc)}
+.calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.calhead b{font-size:20px}
+.nav{background:var(--surf2);border:0;color:var(--tx);font-size:22px;width:46px;height:46px;border-radius:14px}
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-bottom:4px}
+.dow div{text-align:center;font-size:12px;color:var(--mut);padding:4px 0}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+.cell{aspect-ratio:1/1.6;background:var(--bg);border-radius:0;position:relative;overflow:hidden;border:0;padding:0}
+.cell.out{opacity:.35}
+/* 날짜 숫자는 흰 배경 위에서도, 포스터 위에서도 읽혀야 하므로 반투명 흰 칩을 깐다 */
+.cell .n{position:absolute;top:2px;left:2px;font-size:11px;font-weight:600;color:var(--tx);z-index:2;background:#ffffffd9;border-radius:4px;padding:0 4px;line-height:16px}
+.cell .n.hid{display:none}
+.cell .imgs{position:absolute;inset:0;display:flex}
+.cell .imgs.v{flex-direction:column}
+.cell .imgs>i{flex:1;background-size:cover;background-position:center;background-color:var(--surf2)}
+.cell .cnt{position:absolute;bottom:2px;right:2px;font-size:10px;background:var(--acc);color:#fff;border-radius:8px;padding:1px 6px;font-weight:700;z-index:2}
+label{display:block;font-size:13px;color:var(--mut);margin:14px 0 6px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--tx);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;line-height:20px;height:52px}
+textarea{min-height:80px;height:auto;resize:vertical}
+.dtrow{display:flex;gap:8px}
+.dtrow input[type=date]{flex:1.3;min-width:0}
+.dtrow input[type=time]{flex:1;min-width:0}
+.qt{display:flex;gap:8px;margin-top:8px}
+.qt button{flex:1;background:var(--surf2);border:0;color:var(--tx2);border-radius:10px;padding:12px 0;font-size:15px;font-weight:600;font-family:inherit}
+input[type=date],input[type=time],input[type=datetime-local]{
+  -webkit-appearance:none;appearance:none;display:block;
+  min-height:52px;max-height:52px;text-align:left}
+input[type=datetime-local]::-webkit-date-and-time-value{text-align:left;margin:0;height:20px;line-height:20px}
+input[type=datetime-local]::-webkit-calendar-picker-indicator{opacity:.55}
+input[type=number]{-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.btn{width:100%;background:var(--acc);color:#fff;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;font-family:inherit;margin-top:18px}
+.btn.sub{background:var(--surf2);color:var(--tx);margin-top:10px}
+.btn.dan{background:var(--danbg);color:var(--dan)}
+.fab{position:fixed;right:calc(50% - 260px + 16px);bottom:96px;width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;border:0;font-size:32px;z-index:40;box-shadow:0 6px 18px #2f63e840}
+@media(max-width:552px){.fab{right:16px}}
+.modal{position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;display:none}
+.modal.on{display:block}
+.mbox{max-width:520px;margin:0 auto;padding:20px 16px 40px}
+.mtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px}
+.mtop b{font-size:20px;word-break:break-all}
+.x{background:var(--surf2);border:0;color:var(--tx);width:44px;height:44px;border-radius:14px;font-size:20px;flex:none}
+.card{background:var(--surf);border-radius:16px;padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:center;cursor:pointer}
+.card img{width:60px;height:60px;object-fit:cover;border-radius:10px;background:var(--surf2);flex:none}
+.card .bd{min-width:0;flex:1}
+.card .t{font-size:16px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .s{font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card .cp{flex:none;background:var(--surf2);border:0;color:var(--tx2);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600;font-family:inherit}
+.card.det{align-items:flex-start}
+.card.det img{width:76px;height:76px}
+.card.det .s{margin-top:3px;line-height:1.35}
+.card.det .cp{align-self:center}
+.card .s .k{display:inline-block;width:34px;color:var(--mut2)}
+.hero{display:block;max-width:100%;max-height:37vh;width:auto;margin:0 auto 12px;border-radius:14px;background:var(--surf2)}
+.dtitle{font-size:19px;font-weight:700;text-align:center;margin:0 0 10px;line-height:1.35;word-break:break-all}
+.row{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px solid var(--line2);font-size:15px;gap:12px}
+.row span{color:var(--mut);flex:none}
+.row b{font-weight:600;text-align:right;word-break:break-all}
+.drop{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--mut);font-size:15px}
+.drop.has{padding:10px}
+.drop img{max-width:100%;max-height:22vh;width:auto;display:block;margin:0 auto;border-radius:10px}
+.chk{display:flex;align-items:center;gap:10px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:14px;margin:6px 0 0;color:var(--tx);font-size:15px}
+.chk input[type=checkbox]{width:20px;height:20px;min-height:20px;max-height:20px;flex:none;accent-color:var(--acc);margin:0;padding:0}
+.gray{filter:grayscale(1);opacity:.72}
+.stat{background:var(--surf);border-radius:16px;padding:16px;margin-bottom:12px}
+.stat h3{margin:0 0 12px;font-size:16px;color:var(--mut);font-weight:600}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:9px;font-size:14px}
+.bar .lb{width:78px;flex:none;color:var(--tx2)}
+.bar .tr{flex:1;background:var(--surf2);height:22px;border-radius:6px}
+.bar .fi{height:100%;background:linear-gradient(90deg,#2f63e8,#8b5cf6);border-radius:6px}
+.bar .vl{flex:none;font-size:13px;color:var(--mut);min-width:52px;text-align:right}
+.ico{display:flex;gap:8px}
+.ico button{background:var(--surf2);border:0;color:var(--tx2);width:44px;height:44px;border-radius:13px;padding:0;display:flex;align-items:center;justify-content:center}
+.ico button.dan{background:var(--danbg);color:var(--dan)}
+.ico svg{width:21px;height:21px;display:block}
+.zoom{position:fixed;inset:0;background:#000000f2;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
+.zoom img{max-width:100%;max-height:100%;border-radius:12px}
+.msum{margin-top:12px;background:var(--surf);border-radius:12px;padding:12px 16px;display:flex;align-items:center;font-size:14px;color:var(--mut)}
+.msum b{color:var(--tx);font-size:16px;font-weight:700;margin-left:6px}
+.msum i{flex:1}
+.big{display:flex;gap:10px;margin-bottom:12px}
+.big div{flex:1;background:var(--surf);border-radius:16px;padding:16px;text-align:center}
+.big .k{font-size:12px;color:var(--mut)}
+.big .v{font-size:22px;font-weight:800;margin-top:4px}
+.seg{display:flex;background:var(--surf);border-radius:12px;padding:4px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:none;background:none;border:0;color:var(--mut);padding:10px 16px;border-radius:9px;font-size:14px;font-weight:600;font-family:inherit;white-space:nowrap}
+.seg button.on{background:var(--bg);color:var(--tx);box-shadow:0 1px 3px #00000014}
+.empty{text-align:center;color:var(--mut2);padding:50px 0;font-size:15px;line-height:1.7}
+.sbar{display:flex;gap:8px;margin-bottom:12px}
+.sbar input{flex:1}
+.sbar button{flex:none;width:52px;background:var(--surf2);border:0;color:var(--tx);border-radius:12px;font-size:18px}
+.sbar button.act{background:var(--acc);color:#fff}
+.fpanel{background:var(--surf);border-radius:16px;padding:4px 16px 16px;margin-bottom:12px;display:none}
+.fpanel.on{display:block}
+.mono{font-size:13px;color:var(--mut);margin-bottom:10px;line-height:1.6}
+.ym{display:flex;gap:8px}
+.ym select{flex:1}
+</style>
+<div class="wrap"><div id="app"><div class="empty">불러오는 중…</div></div></div>
+<button class="fab" onclick="openForm()">+</button>
+<div class="tabs">
+  <button id="t0" class="on" onclick="go(0)">달력</button>
+  <button id="t1" onclick="go(1)">목록</button>
+  <button id="t2" onclick="go(2)">통계</button>
+  <button id="t3" onclick="go(3)">더보기</button>
+</div>
+<div class="modal" id="modal"><div class="mbox" id="mbody"></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+let DB=[],tab=0,cy=new Date().getFullYear(),cm=new Date().getMonth(),editId=null,tmpImg='';
+let q='',fOpen=false,fGenre='',fVendor='',fY='',fSort='new',limit=40,sy='all';
+const won=n=>(+n||0).toLocaleString('ko-KR');
+// toISOString은 UTC 기준이라 새벽에 하루 밀린다. 오늘 날짜는 로컬 기준으로 만든다
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ---------- IndexedDB ---------- */
+let _db=null;
+function idb(){
+  return _db?Promise.resolve(_db):new Promise((res,rej)=>{
+    const r=indexedDB.open('showlog',1);
+    r.onupgradeneeded=e=>{const d=e.target.result;if(!d.objectStoreNames.contains('recs'))d.createObjectStore('recs',{keyPath:'id'})};
+    r.onsuccess=e=>{_db=e.target.result;res(_db)};
+    r.onerror=()=>rej(r.error);
+  });
+}
+function tx(mode){return idb().then(d=>d.transaction('recs',mode).objectStore('recs'))}
+function getAll(){return tx('readonly').then(s=>new Promise((res,rej)=>{const r=s.getAll();r.onsuccess=()=>res(r.result||[]);r.onerror=()=>rej(r.error)}))}
+function put(o){return tx('readwrite').then(s=>new Promise((res,rej)=>{const r=s.put(o);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)}))}
+function rm(id){return tx('readwrite').then(s=>new Promise((res,rej)=>{const r=s.delete(id);r.onsuccess=()=>res();r.onerror=()=>rej(r.error)}))}
+
+async function load(){
+  try{DB=await getAll()}
+  catch(e){document.getElementById('app').innerHTML='<div class="empty">저장소를 열 수 없습니다.<br>사생활 보호 모드에서는 동작하지 않습니다.</div>';return}
+  try{
+    const old=localStorage.getItem('shows:v1');
+    if(old){
+      const arr=JSON.parse(old);
+      if(Array.isArray(arr)&&arr.length){
+        const ids=new Set(DB.map(x=>x.id));
+        for(const x of arr)if(x&&x.id&&!ids.has(x.id)){await put(x);DB.push(x)}
+      }
+      localStorage.removeItem('shows:v1');
+    }
+  }catch(e){}
+  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+  render();
+}
+function go(t){tab=t;limit=40;[0,1,2,3].forEach(i=>document.getElementById('t'+i).className=i==t?'on':'');render();window.scrollTo(0,0)}
+function render(){document.getElementById('app').innerHTML=[cal,list,stats,more][tab]()}
+
+/* ---------- 달력 ---------- */
+function ofDay(d){return DB.filter(x=>x.date===d).sort((a,b)=>(a.time||'').localeCompare(b.time||''))}
+function cal(){
+  const start=(new Date(cy,cm,1).getDay()+6)%7,days=new Date(cy,cm+1,0).getDate(),prev=new Date(cy,cm,0).getDate();
+  let h=`<div class="calhead"><button class="nav" onclick="mv(-1)">‹</button><b onclick="jump()" style="cursor:pointer">${cy}년 ${cm+1}월</b><button class="nav" onclick="mv(1)">›</button></div>
+  <div class="dow">${['월','화','수','목','금','토','일'].map(d=>`<div>${d}</div>`).join('')}</div><div class="grid">`;
+  for(let i=0;i<start;i++)h+=`<div class="cell out"><div class="n">${prev-start+i+1}</div></div>`;
+  for(let d=1;d<=days;d++){
+    const ds=`${cy}-${String(cm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,it=ofDay(ds);
+    let inner='';
+    if(it.length){
+      inner=`<div class="imgs ${it.length>=3?'v':''}">${it.slice(0,3).map(x=>`<i class="${x.tbd?'gray':''}" style="background-image:url('${x.img||''}')"></i>`).join('')}</div>`;
+      if(it.length>1)inner+=`<div class="cnt">${it.length}</div>`;
+    }
+    // 기록이 있는 날은 날짜 숫자를 감춘다(사진을 가리지 않게)
+    h+=`<button class="cell" onclick="dayTap('${ds}')">${inner}<div class="n${it.length?' hid':''}">${d}</div></button>`;
+  }
+  h+='</div>';
+  const mo=DB.filter(x=>(x.date||'').startsWith(`${cy}-${String(cm+1).padStart(2,'0')}`));
+  h+=`<div class="msum">이번 달 <b>${mo.length}회</b><i></i><b>${won(mo.reduce((s,x)=>s+(+x.price||0),0))}원</b></div>`;
+  return h;
+}
+function mv(n){cm+=n;if(cm<0){cm=11;cy--}if(cm>11){cm=0;cy++}render()}
+function years(){
+  const s=new Set(DB.map(x=>(x.date||'').slice(0,4)).filter(Boolean));
+  s.add(String(new Date().getFullYear()));s.add(String(cy));
+  return [...s].sort().reverse();
+}
+function jump(){
+  const ys=years(),now=new Date();
+  open(`<div class="mtop"><b>날짜 이동</b><button class="x" onclick="close_()">✕</button></div>
+  <div class="ym" style="margin-top:14px">
+  <select id="jy">${ys.map(y=>`<option ${+y===cy?'selected':''}>${y}</option>`).join('')}</select>
+  <select id="jm">${Array.from({length:12},(_,i)=>`<option value="${i}" ${i===cm?'selected':''}>${i+1}월</option>`).join('')}</select></div>
+  <button class="btn" onclick="cy=+document.getElementById('jy').value;cm=+document.getElementById('jm').value;close_();render()">이동</button>
+  <button class="btn sub" onclick="cy=${now.getFullYear()};cm=${now.getMonth()};close_();render()">오늘로</button>`);
+}
+function dayTap(ds){
+  const it=ofDay(ds);
+  if(!it.length)return openForm(null,ds);
+  if(it.length===1)return detail(it[0].id);
+  open(`<div class="mtop"><b>${ds}</b><button class="x" onclick="close_()">✕</button></div>
+  ${it.map(x=>card(x,1,1)).join('')}<button class="btn sub" onclick="openForm(null,'${ds}')">이 날짜에 추가</button>`);
+}
+// det=1이면 일시·출연·장소·좌석을 각각 한 줄씩 보여준다(달력 날짜 목록용)
+function card(x,cp,det){
+  const ln=(k,v)=>v?`<div class="s"><span class="k">${k}</span>${esc(v)}</div>`:'';
+  const bd=det
+    ?`<div class="s"><span class="k">일시</span>${x.date||''} ${x.time||''}</div>
+      ${ln('출연',x.cast)}${ln('장소',x.place)}${ln('좌석',x.seat)}`
+    :`<div class="s">${x.date||''} ${x.time||''} · ${esc(x.place)||'-'}</div>`;
+  return `<div class="card ${det?'det':''}" onclick="detail('${x.id}')">
+    <img class="${x.tbd?'gray':''}" src="${x.img||''}" onerror="this.style.visibility='hidden'">
+    <div class="bd"><div class="t">${esc(x.title)}</div>${bd}</div>
+    ${cp?`<button class="cp" onclick="event.stopPropagation();openForm('${x.id}',null,1)">복사</button>`:''}</div>`;
+}
+
+/* ---------- 목록 + 검색/필터 ---------- */
+function uniq(k){return [...new Set(DB.map(x=>(x[k]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'))}
+function filtered(){
+  const t=q.trim().toLowerCase();
+  const r=DB.filter(x=>{
+    if(fGenre&&x.genre!==fGenre)return false;
+    if(fVendor&&(x.vendor||'').trim()!==fVendor)return false;
+    if(fY&&!(x.date||'').startsWith(fY))return false;
+    if(!t)return true;
+    return ['title','cast','place','seat','vendor','memo','genre'].some(k=>(x[k]||'').toLowerCase().includes(t));
+  });
+  const S={new:(a,b)=>(b.date||'').localeCompare(a.date||''),old:(a,b)=>(a.date||'').localeCompare(b.date||''),
+    hi:(a,b)=>(+b.price||0)-(+a.price||0),name:(a,b)=>(a.title||'').localeCompare(b.title||'','ko')};
+  return r.sort(S[fSort]);
+}
+function list(){
+  const r=filtered(),act=fGenre||fVendor||fY;
+  return `<h1>목록</h1>
+  <div class="sbar"><input placeholder="공연명·출연·장소·메모 검색" value="${esc(q)}" oninput="q=this.value;limit=40;redrawList()">
+  <button class="${act?'act':''}" onclick="fOpen=!fOpen;render()">⚙</button></div>
+  <div class="fpanel ${fOpen?'on':''}">
+    <label>장르</label><select onchange="fGenre=this.value;limit=40;render()"><option value="">전체</option>${uniq('genre').map(g=>`<option ${fGenre===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
+    <label>예매처</label><select onchange="fVendor=this.value;limit=40;render()"><option value="">전체</option>${uniq('vendor').map(g=>`<option ${fVendor===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
+    <label>연도</label><select onchange="fY=this.value;limit=40;render()"><option value="">전체</option>${years().map(y=>`<option ${fY===y?'selected':''}>${y}</option>`).join('')}</select>
+    <label>정렬</label><select onchange="fSort=this.value;limit=40;render()">
+      <option value="new" ${fSort=='new'?'selected':''}>최신순</option><option value="old" ${fSort=='old'?'selected':''}>오래된순</option>
+      <option value="hi" ${fSort=='hi'?'selected':''}>금액 높은순</option><option value="name" ${fSort=='name'?'selected':''}>공연명순</option></select>
+    <button class="btn sub" onclick="fGenre=fVendor=fY='';fSort='new';render()">필터 초기화</button>
+  </div>
+  <div id="lbody">${listBody(r)}</div>`;
+}
+function listBody(r){
+  if(!r.length)return '<div class="empty">결과가 없습니다</div>';
+  let h=r.slice(0,limit).map(x=>card(x,1)).join('');
+  if(r.length>limit)h+=`<button class="btn sub" onclick="limit+=40;redrawList()">더 보기 (${r.length-limit}건 남음)</button>`;
+  return h;
+}
+function redrawList(){
+  const r=filtered();
+  const b=document.getElementById('lbody'),s=document.getElementById('lsum');
+  if(b)b.innerHTML=listBody(r);
+  if(s)s.textContent=`${r.length}건 · 합계 ${won(r.reduce((a,x)=>a+(+x.price||0),0))}원`;
+}
+
+/* ---------- 상세 ---------- */
+function detail(id){
+  const x=DB.find(v=>v.id===id);if(!x)return;
+  const r=(k,v)=>v?`<div class="row"><span>${k}</span><b>${esc(v)}</b></div>`:'';
+  open(`<div class="mtop"><div class="ico">
+    <button onclick="openForm('${x.id}')" title="수정">${IC.edit}</button>
+    <button onclick="openForm('${x.id}',null,1)" title="복사">${IC.copy}</button>
+    <button class="dan" onclick="del('${x.id}')" title="삭제">${IC.trash}</button>
+  </div><button class="x" onclick="close_()">✕</button></div>
+  ${x.img?`<img class="hero ${x.tbd?'gray':''}" src="${x.img}" onclick="zoom('${x.id}')">`:''}
+  <div class="dtitle">${esc(x.title)}</div>
+  ${r('날짜',((x.date||'')+' '+(x.time||'')).trim())}${r('출연',x.cast)}${r('장소',x.place)}${r('좌석',x.seat)}${r('장르',x.genre)}
+  ${x.price?`<div class="row"><span>금액</span><b>${won(x.price)}원</b></div>`:''}
+  ${r('예매처',x.vendor)}${r('메모',x.memo)}`);
+}
+const SVG=(p)=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const IC={
+  edit:SVG('<path d="M14.5 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9.5"/><path d="M18.4 3.6a2.1 2.1 0 0 1 3 3l-8.7 8.7-3.9.9.9-3.9Z"/>'),
+  copy:SVG('<path d="M16 8V6.5A1.5 1.5 0 0 0 14.5 5h-8A1.5 1.5 0 0 0 5 6.5v8A1.5 1.5 0 0 0 6.5 16H8"/><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M13.5 11.5v4M11.5 13.5h4"/>'),
+  trash:SVG('<path d="M3.5 6.6h17"/><path d="M9.2 6.6V5.4A1.6 1.6 0 0 1 10.8 3.8h2.4a1.6 1.6 0 0 1 1.6 1.6v1.2"/><path d="M6 9.4h12v9.4a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2Z"/><path d="M10.3 12.4v5M13.7 12.4v5"/>')
+};
+function zoom(id){
+  const x=DB.find(v=>v.id===id);if(!x||!x.img)return;
+  const d=document.createElement('div');
+  d.className='zoom';d.innerHTML=`<img src="${x.img}">`;
+  d.onclick=()=>d.remove();
+  document.body.appendChild(d);
+}
+async function del(id){
+  if(!confirm('삭제할까요?'))return;
+  await rm(id);DB=DB.filter(v=>v.id!==id);close_();render();
+}
+
+/* ---------- 입력 ---------- */
+function openForm(id,ds,copy){
+  const src=(id?DB.find(v=>v.id===id):null)||{};
+  const x=copy?Object.assign({},src,{memo:''}):src; // 복사 시 날짜·시간도 원본 그대로 유지
+  editId=copy?null:(id||null);
+  tmpImg=x.img||'';
+  const f=(k,l,t,v)=>`<label>${l}</label><input id="f_${k}" type="${t||'text'}" value="${esc(v)}">`;
+  const gl=[...new Set(['뮤지컬','연극','콘서트','클래식','무용','전시','영화','기타'].concat(uniq('genre')))];
+  open(`<div class="mtop"><b>${copy?'복사해서 추가':(id?'기록 수정':'새 기록')}</b><button class="x" onclick="close_()">✕</button></div>
+  ${copy?'<div class="mono" style="margin:10px 0 0">메모를 뺀 모든 항목을 그대로 복사했습니다. 필요한 곳만 고치세요.</div>':''}
+  <label>이미지</label>
+  <div class="drop ${tmpImg?'has':''}" onclick="document.getElementById('fimg').click()" id="drop">${tmpImg?`<img src="${tmpImg}">`:'탭해서 포스터 이미지 선택'}</div>
+  <input id="fimg" type="file" accept="image/*" multiple style="display:none" onchange="pick(this)">
+  ${f('title','공연명','text',x.title)}
+  <label>날짜 · 시간</label>
+  <div class="dtrow">
+    <input id="f_date" type="date" value="${x.date||ds||today()}">
+    <input id="f_time" type="time" value="${x.time||'20:00'}">
+  </div>
+  <div class="qt">${['14:00','15:00','18:00','19:00'].map(t=>`<button type="button" onclick="setT('${t}')">${+t.slice(0,2)%12||12}시</button>`).join('')}</div>
+  ${f('cast','출연','text',x.cast)}
+  <label>장소</label><input id="f_place" list="pl" value="${esc(x.place)}">
+  <datalist id="pl">${uniq('place').map(v=>`<option>${esc(v)}</option>`).join('')}</datalist>
+  ${f('seat','좌석','text',x.seat)}
+  <label>장르</label><select id="f_genre">${gl.map(g=>`<option ${x.genre===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
+  ${f('price','금액','number',x.price)}
+  <label>예매처</label><input id="f_vendor" list="vl" value="${esc(x.vendor)}">
+  <datalist id="vl">${uniq('vendor').map(v=>`<option>${esc(v)}</option>`).join('')}</datalist>
+  <label>메모</label><textarea id="f_memo">${esc(x.memo)}</textarea>
+  <label>상태</label>
+  <label class="chk"><input type="checkbox" id="f_tbd" ${x.tbd?'checked':''}><span>미정 일정 (이미지를 흑백으로 표시)</span></label>
+  <button class="btn" onclick="submit()">저장</button>`);
+}
+function setT(t){document.getElementById('f_time').value=t}
+function pick(el){
+  const fl=el.files[0];if(!fl)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const im=new Image();
+    im.onload=()=>{
+      const mx=900,sc=Math.min(1,mx/Math.max(im.width,im.height));
+      const c=document.createElement('canvas');c.width=im.width*sc|0;c.height=im.height*sc|0;
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      tmpImg=c.toDataURL('image/jpeg',.8);
+      const d=document.getElementById('drop');d.className='drop has';d.innerHTML=`<img src="${tmpImg}">`;
+    };im.src=r.result;
+  };r.readAsDataURL(fl);
+}
+async function submit(){
+  const g=k=>document.getElementById('f_'+k).value.trim();
+  if(!g('title'))return alert('공연명을 입력해주세요');
+  const dt=g('date');
+  if(!dt)return alert('날짜를 입력해주세요');
+  const o={id:editId||String(Date.now())+Math.random().toString(36).slice(2,6),img:tmpImg,
+    title:g('title'),date:dt,time:g('time'),cast:g('cast'),place:g('place'),seat:g('seat'),
+    genre:g('genre'),price:g('price'),vendor:g('vendor'),memo:g('memo'),
+    tbd:document.getElementById('f_tbd').checked};
+  try{await put(o)}catch(e){return alert('저장에 실패했습니다')}
+  DB=editId?DB.map(v=>v.id===editId?o:v):DB.concat([o]);
+  close_();render();
+}
+
+/* ---------- 통계 ---------- */
+function stats(){
+  if(!DB.length)return '<h1>통계</h1><div class="empty">기록이 없습니다</div>';
+  const ys=years(),yr=sy==='all'?String(cy):sy;
+  const mon=Array.from({length:12},(_,i)=>DB.filter(x=>(x.date||'').startsWith(`${yr}-${String(i+1).padStart(2,'0')}`)));
+  const mxC=Math.max(1,...mon.map(m=>m.length)),mxP=Math.max(1,...mon.map(m=>m.reduce((s,x)=>s+(+x.price||0),0)));
+  const pool=sy==='all'?DB:DB.filter(x=>(x.date||'').startsWith(sy));
+  const byT={};pool.forEach(x=>byT[x.title]=(byT[x.title]||0)+1);
+  const rank=Object.entries(byT).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0],'ko'));
+  const mxT=Math.max(1,...rank.map(r=>r[1]));
+  const yrC=ys.map(y=>[y,DB.filter(x=>(x.date||'').startsWith(y)).length]);
+  const mxY=Math.max(1,...yrC.map(r=>r[1]));
+  return `<h1>통계</h1>
+  <div class="seg"><button class="${sy==='all'?'on':''}" onclick="sy='all';render()">전체</button>
+  ${ys.map(y=>`<button class="${sy===y?'on':''}" onclick="sy='${y}';render()">${y}</button>`).join('')}</div>
+  <div class="big"><div><div class="k">총 관람</div><div class="v">${pool.length}회</div></div>
+  <div><div class="k">총 금액</div><div class="v">${won(pool.reduce((s,x)=>s+(+x.price||0),0))}</div></div></div>
+  ${sy==='all'?`<div class="stat"><h3>연도별 관람수</h3>${yrC.map(([y,c])=>`<div class="bar"><div class="lb">${y}</div><div class="tr"><div class="fi" style="width:${c/mxY*100}%"></div></div><div class="vl">${c}회</div></div>`).join('')}</div>`:''}
+  <div class="stat"><h3>${yr}년 월별 관람수</h3>
+  ${mon.map((m,i)=>`<div class="bar"><div class="lb">${i+1}월</div><div class="tr"><div class="fi" style="width:${m.length/mxC*100}%"></div></div><div class="vl">${m.length}회</div></div>`).join('')}</div>
+  <div class="stat"><h3>${yr}년 월별 관람금액</h3>
+  ${mon.map((m,i)=>{const p=m.reduce((s,x)=>s+(+x.price||0),0);return `<div class="bar"><div class="lb">${i+1}월</div><div class="tr"><div class="fi" style="width:${p/mxP*100}%"></div></div><div class="vl">${won(p)}</div></div>`}).join('')}</div>
+  <div class="stat"><h3>작품별 관람수 (${sy==='all'?'전체':sy+'년'}) · ${rank.length}작품</h3>
+  ${rank.slice(0,60).map(([t,c])=>`<div class="bar"><div class="lb" style="width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t)}</div><div class="tr"><div class="fi" style="width:${c/mxT*100}%"></div></div><div class="vl">${c}회</div></div>`).join('')}
+  ${rank.length>60?'<div class="mono" style="margin:8px 0 0">상위 60개만 표시</div>':''}</div>`;
+}
+
+/* ---------- 더보기 ---------- */
+function more(){
+  const bytes=DB.reduce((s,x)=>s+(x.img||'').length,0);
+  return `<h1>더보기</h1>
+  <div class="big"><div><div class="k">전체 기록</div><div class="v">${DB.length}건</div></div>
+  <div><div class="k">이미지 용량</div><div class="v">${(bytes/1048576).toFixed(1)}MB</div></div></div>
+  <div class="stat"><h3>엑셀 내보내기</h3><div class="mono" style="margin:0">이미지를 제외한 모든 정보를 .xlsx 파일로 저장합니다.</div></div>
+  <button class="btn" onclick="xlsx()">엑셀 파일로 내보내기</button>
+  <div class="stat" style="margin-top:24px"><h3>엑셀 가져오기</h3><div class="mono" style="margin:0">엑셀에 정리한 기록을 한 번에 불러옵니다. 첫 줄은 <b style="color:var(--tx2)">공연명 · 날짜 · 시간 · 출연 · 장소 · 좌석 · 장르 · 금액 · 예매처 · 메모 · 미정</b> 순서여야 합니다. 공연명과 날짜만 있으면 나머지는 비워도 됩니다.</div></div>
+  <button class="btn sub" onclick="tmpl()">빈 서식 파일 받기</button>
+  <button class="btn sub" onclick="document.getElementById('fxls').click()">엑셀 파일 불러오기</button>
+  <input id="fxls" type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="impXls(this)">
+  <div class="stat" style="margin-top:24px"><h3>백업 · 복원</h3><div class="mono" style="margin:0">기록은 이 브라우저에만 저장됩니다. 기기를 옮기거나 브라우저 데이터가 지워질 경우를 대비해 정기적으로 백업해주세요. 이미지까지 모두 포함됩니다.</div></div>
+  <button class="btn sub" onclick="backup()">백업 파일 저장</button>
+  <button class="btn sub" onclick="document.getElementById('fjson').click()">백업 파일 불러오기</button>
+  <input id="fjson" type="file" accept=".json,application/json" style="display:none" onchange="restore(this)">
+  <div class="stat" style="margin-top:24px"><h3>전체 삭제</h3><div class="mono" style="margin:0">모든 기록을 한 번에 지웁니다. 되돌릴 수 없으니 먼저 백업을 받아두세요. 잘못 불러온 기록을 정리하고 새로 시작할 때 사용합니다.</div></div>
+  <button class="btn dan" onclick="clearAll()">전체 기록 삭제</button>`;
+}
+async function clearAll(){
+  if(!DB.length)return alert('기록이 없습니다');
+  if(!confirm(`전체 ${DB.length}건을 모두 삭제합니다.\n되돌릴 수 없습니다. 계속할까요?`))return;
+  const ans=prompt('확인을 위해 삭제 라고 입력해주세요.');
+  if(ans==null)return;
+  if(ans.trim()!=='삭제')return alert('입력이 일치하지 않아 취소했습니다.');
+  try{
+    const s=await tx('readwrite');
+    await new Promise((res,rej)=>{const r=s.clear();r.onsuccess=res;r.onerror=()=>rej(r.error)});
+    DB=[];render();alert('전체 기록을 삭제했습니다.');
+  }catch(e){alert('삭제 중 오류가 발생했습니다')}
+}
+const COLS=['공연명','날짜','시간','출연','장소','좌석','장르','금액','예매처','메모','미정'];
+// 엑셀의 미정 칸: O · ○ · V · Y · 1 · 미정 등이면 미정으로 본다(빈칸·X는 확정)
+const isTbd=v=>/^(o|○|●|v|✓|y|yes|true|1|미정|예)$/i.test(String(v??'').trim());
+function tmpl(){
+  const ws=XLSX.utils.aoa_to_sheet([COLS,
+    ['레미제라블','2016-03-15','19:30','홍광호','블루스퀘어','1층 A열 12번','뮤지컬',140000,'인터파크','예시 줄입니다. 지우고 쓰세요','O'],
+    ['','','','','','','','','','','']]);
+  ws['!cols']=[{wch:26},{wch:12},{wch:8},{wch:20},{wch:20},{wch:16},{wch:10},{wch:12},{wch:14},{wch:30},{wch:8}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'관람기록');
+  XLSX.writeFile(wb,'관람기록_입력서식.xlsx');
+}
+function pDate(v){
+  if(v==null||v==='')return '';
+  // SheetJS가 만든 Date는 로컬 기준일(1899-12-30)에서 계산되므로 반드시 로컬 게터로 읽는다
+  if(v instanceof Date&&!isNaN(v))return [v.getFullYear(),String(v.getMonth()+1).padStart(2,'0'),String(v.getDate()).padStart(2,'0')].join('-');
+  if(typeof v==='number'){
+    const d=XLSX.SSF.parse_date_code(v);
+    if(d&&d.y)return [d.y,String(d.m).padStart(2,'0'),String(d.d).padStart(2,'0')].join('-');
+    return '';
+  }
+  const s=String(v).trim();
+  let m=s.match(/(\d{4})\s*[-./년]\s*(\d{1,2})\s*[-./월]\s*(\d{1,2})/);
+  if(m)return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  m=s.match(/^(\d{4})(\d{2})(\d{2})$/);
+  if(m)return `${m[1]}-${m[2]}-${m[3]}`;
+  return '';
+}
+function pTime(v){
+  if(v==null||v==='')return '';
+  if(v instanceof Date&&!isNaN(v)){const t=Math.round(v.getHours()*60+v.getMinutes()+v.getSeconds()/60);
+    return String(Math.floor(t/60)%24).padStart(2,'0')+':'+String(t%60).padStart(2,'0')}
+  if(typeof v==='number'){
+    const f=v%1,t=Math.round(f*1440);
+    return String(Math.floor(t/60)%24).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+  }
+  const s=String(v).trim();
+  let m=s.match(/(오전|오후|AM|PM|am|pm)?\s*(\d{1,2})\s*[:시]\s*(\d{1,2})/);
+  if(m){
+    let hh=+m[2];const pm=/오후|PM|pm/.test(m[1]||'');
+    if(pm&&hh<12)hh+=12; if(/오전|AM|am/.test(m[1]||'')&&hh===12)hh=0;
+    return String(hh).padStart(2,'0')+':'+m[3].padStart(2,'0');
+  }
+  m=s.match(/^(\d{1,2})\s*시$/);
+  if(m)return String(+m[1]).padStart(2,'0')+':00';
+  return '';
+}
+// 중복 판정 키: 공연명+날짜+시간 (앞뒤 공백·중복 공백·대소문자 무시)
+const dkey=o=>[o.title,o.date,o.time||''].map(s=>String(s).trim().replace(/\s+/g,' ').toLowerCase()).join('|');
+function impXls(el){
+  const fl=el.files[0];if(!fl)return;
+  const r=new FileReader();
+  r.onload=async()=>{
+    let rows;
+    try{
+      // cellDates를 켜면 날짜가 타임존 영향을 받으므로, 시리얼 숫자 그대로 받아 pDate/pTime에서 변환한다
+      const wb=XLSX.read(r.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+    }catch(e){el.value='';return alert('엑셀 파일을 읽을 수 없습니다')}
+    if(!rows||rows.length<2){el.value='';return alert('내용이 비어 있습니다')}
+    // 헤더 위치 찾기
+    let hi=rows.findIndex(rw=>rw.some(c=>String(c).trim()==='공연명'));
+    if(hi<0)hi=0;
+    const head=rows[hi].map(c=>String(c).trim());
+    const idx={};COLS.forEach(c=>idx[c]=head.indexOf(c));
+    if(idx['공연명']<0){el.value='';return alert('첫 줄에서 "공연명" 열을 찾을 수 없습니다')}
+    const get=(rw,c)=>idx[c]>=0?rw[idx[c]]:'';
+    const recs=[],bad=[],dup=[];
+    const seen=new Set(DB.map(dkey)); // 이미 저장된 기록 + 이번 파일 안의 중복까지 걸러낸다
+    for(let i=hi+1;i<rows.length;i++){
+      const rw=rows[i];if(!rw||!rw.length)continue;
+      const title=String(get(rw,'공연명')??'').trim();
+      if(!title)continue;
+      const date=pDate(get(rw,'날짜'));
+      if(!date){bad.push(`${i+1}행 ${title}`);continue}
+      const o={id:'x'+Date.now().toString(36)+i.toString(36)+Math.random().toString(36).slice(2,5),img:'',
+        title,date,time:pTime(get(rw,'시간')),
+        cast:String(get(rw,'출연')??'').trim(),place:String(get(rw,'장소')??'').trim(),
+        seat:String(get(rw,'좌석')??'').trim(),genre:String(get(rw,'장르')??'').trim()||'기타',
+        price:String(get(rw,'금액')??'').replace(/[^0-9]/g,''),
+        vendor:String(get(rw,'예매처')??'').trim(),memo:String(get(rw,'메모')??'').trim(),
+        tbd:isTbd(get(rw,'미정'))};
+      const k=dkey(o);
+      if(seen.has(k)){dup.push(`${date} ${title}`);continue}
+      seen.add(k);recs.push(o);
+    }
+    el.value='';
+    if(!recs.length){
+      if(dup.length)return alert(`새로 추가할 기록이 없습니다.\n엑셀의 ${dup.length}건이 모두 이미 등록되어 있습니다.`);
+      return alert('불러올 기록이 없습니다.\n날짜 형식을 확인해주세요.');
+    }
+    let msg=`${recs.length}건을 불러옵니다.`;
+    if(dup.length)msg+=`\n\n이미 있어서 제외된 ${dup.length}건:\n`+dup.slice(0,5).join('\n')+(dup.length>5?`\n… 외 ${dup.length-5}건`:'');
+    if(bad.length)msg+=`\n\n날짜를 읽을 수 없어 제외된 ${bad.length}건:\n`+bad.slice(0,5).join('\n')+(bad.length>5?`\n… 외 ${bad.length-5}건`:'');
+    msg+='\n\n계속할까요?';
+    if(!confirm(msg))return;
+    let ok=0;
+    try{for(const o of recs){await put(o);DB.push(o);ok++}}
+    catch(e){alert(`${ok}건까지 저장한 뒤 오류가 발생했습니다.`);render();return}
+    render();
+    alert(`${ok}건을 불러왔습니다.`);
+  };
+  r.readAsArrayBuffer(fl);
+}
+function xlsx(){
+  if(!DB.length)return alert('기록이 없습니다');
+  const rows=DB.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>({
+    '공연명':x.title,'날짜':x.date,'시간':x.time,'출연':x.cast,'장소':x.place,
+    '좌석':x.seat,'장르':x.genre,'금액':+x.price||0,'예매처':x.vendor,'메모':x.memo,'미정':x.tbd?'O':''}));
+  const ws=XLSX.utils.json_to_sheet(rows,{header:COLS});
+  ws['!cols']=[{wch:26},{wch:12},{wch:8},{wch:20},{wch:20},{wch:14},{wch:10},{wch:12},{wch:14},{wch:30},{wch:8}];
+  const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'관람기록');
+  XLSX.writeFile(wb,`관람기록_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+function backup(){
+  if(!DB.length)return alert('기록이 없습니다');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(DB)],{type:'application/json'}));
+  a.download=`관람기록_백업_${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function restore(el){
+  const fl=el.files[0];if(!fl)return;
+  const r=new FileReader();
+  r.onload=async()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!Array.isArray(d))throw 0;
+      const merge=confirm(d.length+'건을 불러옵니다.\n\n확인 = 현재 기록에 합치기\n취소 = 전체 교체');
+      if(!merge){for(const x of DB)await rm(x.id);DB=[]}
+      const ids=new Set(DB.map(x=>x.id));
+      for(const x of d)if(x&&x.id&&!ids.has(x.id)){await put(x);DB.push(x);ids.add(x.id)}
+      render();alert('불러오기 완료');
+    }catch(e){alert('올바른 백업 파일이 아닙니다')}
+    el.value='';
+  };r.readAsText(fl);
+}
+
+/* ---------- 모달 ---------- */
+function open(h){
+  const m=document.getElementById('modal');
+  document.getElementById('mbody').innerHTML=h;
+  m.classList.add('on');
+  m.scrollTop=0; // 모달은 자체 스크롤 컨테이너라, 이전에 내려둔 위치가 그대로 남는다
+  window.scrollTo(0,0);
+}
+function close_(){document.getElementById('modal').classList.remove('on')}
+
+/* ---------- 달력 좌우 스와이프 ---------- */
+(function(){
+  const el=document.getElementById('app');
+  let x0=0,y0=0,on=false,swiped=false;
+  el.addEventListener('touchstart',e=>{
+    on=tab===0&&e.touches.length===1;
+    if(on){x0=e.touches[0].clientX;y0=e.touches[0].clientY}
+  },{passive:true});
+  el.addEventListener('touchend',e=>{
+    if(!on)return;on=false;
+    const t=e.changedTouches[0],dx=t.clientX-x0,dy=t.clientY-y0;
+    // 가로 이동이 60px 넘고, 세로 이동보다 확실히 커야 달 이동으로 본다(스크롤과 구분)
+    if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.5)return;
+    swiped=true;setTimeout(()=>swiped=false,400);
+    mv(dx<0?1:-1);
+  },{passive:true});
+  // 스와이프로 끝난 터치가 날짜 버튼 클릭으로 이어지지 않게 막는다
+  el.addEventListener('click',e=>{if(swiped){swiped=false;e.stopPropagation();e.preventDefault()}},true);
+})();
+load();
+</script>
