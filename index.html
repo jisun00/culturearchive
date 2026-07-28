@@ -70,12 +70,16 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .btn.dan{background:var(--danbg);color:var(--dan)}
 .fab{position:fixed;right:calc(50% - 260px + 16px);bottom:96px;width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;border:0;font-size:32px;z-index:40;box-shadow:0 6px 18px #2f63e840}
 @media(max-width:552px){.fab{right:16px}}
-/* 홈 화면 앱(standalone)은 사파리 하단 바가 없어 여백이 과하게 남는다. 탭바를 위로 올린다 */
+/* 홈 화면 앱은 사파리 하단 바가 없어 여백이 과하게 남는다. 탭바를 위로 올린다.
+   iOS는 display-mode 미디어쿼리가 안 잡히는 경우가 있어 navigator.standalone으로도 판정한다(.pwa) */
 @media(display-mode:standalone){
-  .tabs button{padding:13px 0}
-  body{padding-bottom:74px}
-  .fab{bottom:82px}
+  .tabs button{padding:11px 0}
+  body{padding-bottom:66px}
+  .fab{bottom:74px}
 }
+.pwa .tabs button{padding:11px 0}
+.pwa body{padding-bottom:66px}
+.pwa .fab{bottom:74px}
 .modal{position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;display:none}
 .modal.on{display:block}
 .mbox{max-width:520px;margin:0 auto;padding:20px 16px 40px}
@@ -614,6 +618,11 @@ function open(h){
   window.scrollTo(0,0);
 }
 function close_(){document.getElementById('modal').classList.remove('on')}
+
+/* ---------- 홈 화면 앱 여부 판정 ---------- */
+if(navigator.standalone||matchMedia('(display-mode: standalone)').matches
+   ||matchMedia('(display-mode: fullscreen)').matches)
+  document.documentElement.classList.add('pwa');
 
 /* ---------- 달력 좌우 스와이프 ---------- */
 (function(){
