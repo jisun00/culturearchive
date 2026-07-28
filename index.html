@@ -32,9 +32,10 @@ h1{font-size:24px;margin:8px 0 18px;letter-spacing:-.5px}
 .calhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .calhead b{font-size:20px}
 .nav{background:var(--surf2);border:0;color:var(--tx);font-size:22px;width:46px;height:46px;border-radius:14px}
-.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin-bottom:4px}
+/* 달력만 좌우 여백(.wrap의 16px)을 없애 날짜 칸을 최대한 넓게 쓴다 */
+.dow{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin:0 -16px 4px}
 .dow div{text-align:center;font-size:14px;color:var(--mut);padding:5px 0}
-.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0}
+.grid{display:grid;grid-template-columns:repeat(7,1fr);gap:0;margin:0 -16px}
 .cell{aspect-ratio:1/1.6;background:var(--bg);border-radius:0;position:relative;overflow:hidden;border:0;padding:0}
 .cell.out{opacity:.35}
 /* 날짜 숫자는 흰 배경 위에서도, 포스터 위에서도 읽혀야 하므로 반투명 흰 칩을 깐다 */
@@ -68,7 +69,10 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .btn{width:100%;background:var(--acc);color:#fff;border:0;border-radius:14px;padding:16px;font-size:17px;font-weight:700;font-family:inherit;margin-top:18px}
 .btn.sub{background:var(--surf2);color:var(--tx);margin-top:10px}
 .btn.dan{background:var(--danbg);color:var(--dan)}
-.fab{position:fixed;right:calc(50% - 260px + 16px);bottom:96px;width:60px;height:60px;border-radius:50%;background:var(--acc);color:#fff;border:0;font-size:32px;z-index:40;box-shadow:0 6px 18px #2f63e840}
+/* + 는 글자가 아니라 SVG. 글자로 두면 폰트 기준선 때문에 원 중앙에서 미세하게 어긋난다 */
+.fab{position:fixed;right:calc(50% - 260px + 16px);bottom:96px;width:54px;height:54px;border-radius:50%;background:var(--acc);color:#fff;border:0;padding:0;z-index:40;box-shadow:0 6px 18px #2f63e840;
+  display:flex;align-items:center;justify-content:center}
+.fab svg{width:26px;height:26px;display:block}
 @media(max-width:552px){.fab{right:16px}}
 /* 홈 화면 앱(.pwa)은 사파리 하단 툴바가 없어 탭바가 화면 맨 아래에 붙는다.
    아래 여백을 키워 글자를 위로 올린다. 높이 조절은 --lift 한 값만 바꾸면 된다 */
@@ -87,7 +91,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .save{background:var(--acc);color:#fff;border:0;border-radius:14px;height:44px;padding:0 18px;font-size:16px;font-weight:700;font-family:inherit;flex:none}
 .x{background:var(--surf2);border:0;color:var(--tx);width:44px;height:44px;border-radius:14px;font-size:20px;flex:none}
 .card{background:var(--surf);border-radius:16px;padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:center;cursor:pointer}
-.card img{width:60px;height:60px;object-fit:cover;border-radius:10px;background:var(--surf2);flex:none}
+.card img{width:60px;height:60px;object-fit:cover;background:var(--surf2);flex:none}
 .card .bd{min-width:0;flex:1}
 .card .t{font-size:16px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .s{font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -97,14 +101,14 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .card.det .s{margin-top:3px;line-height:1.35}
 .card.det .cp{align-self:center}
 .card .s .k{display:inline-block;width:34px;color:var(--mut2)}
-.hero{display:block;max-width:100%;max-height:37vh;width:auto;margin:0 auto 12px;border-radius:14px;background:var(--surf2)}
+.hero{display:block;max-width:100%;max-height:37vh;width:auto;margin:0 auto 12px;background:var(--surf2)}
 .dtitle{font-size:19px;font-weight:700;text-align:center;margin:0 0 10px;line-height:1.35;word-break:break-all}
 .row{display:flex;padding:9px 2px;border-bottom:1px solid var(--line2);font-size:15px;gap:12px}
 .row span{color:var(--mut);flex:none;width:60px}
 .row b{font-weight:600;text-align:left;word-break:break-all;flex:1;min-width:0}
 .drop{border:2px dashed var(--line);border-radius:14px;padding:26px;text-align:center;color:var(--mut);font-size:15px}
 .drop.has{padding:10px}
-.drop img{max-width:100%;max-height:22vh;width:auto;display:block;margin:0 auto;border-radius:10px}
+.drop img{max-width:100%;max-height:22vh;width:auto;display:block;margin:0 auto}
 .chk{display:flex;align-items:center;gap:10px;background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:14px;margin:6px 0 0;color:var(--tx);font-size:15px}
 .chk input[type=checkbox]{width:20px;height:20px;min-height:20px;max-height:20px;flex:none;accent-color:var(--acc);margin:0;padding:0}
 .gray{filter:grayscale(1);opacity:.72}
@@ -120,7 +124,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .ico button.dan{background:var(--danbg);color:var(--dan)}
 .ico svg{width:21px;height:21px;display:block}
 .zoom{position:fixed;inset:0;background:#000000f2;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px}
-.zoom img{max-width:100%;max-height:100%;border-radius:12px}
+.zoom img{max-width:100%;max-height:100%}
 .msum{margin-top:12px;background:var(--surf);border-radius:12px;padding:12px 16px;display:flex;align-items:center;font-size:14px;color:var(--mut)}
 .msum b{color:var(--tx);font-size:16px;font-weight:700;margin-left:6px}
 .msum i{flex:1}
@@ -144,7 +148,7 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .ym select{flex:1}
 </style>
 <div class="wrap"><div id="app"><div class="empty">불러오는 중…</div></div></div>
-<button class="fab" onclick="openForm()">+</button>
+<button class="fab" onclick="openForm()" aria-label="기록 추가"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 4.5v15M4.5 12h15"/></svg></button>
 <div class="tabs">
   <button id="t0" class="on" onclick="go(0)">달력</button>
   <button id="t1" onclick="go(1)">목록</button>
@@ -217,7 +221,7 @@ function cal(){
   const start=(new Date(cy,cm,1).getDay()+6)%7,days=new Date(cy,cm+1,0).getDate(),prev=new Date(cy,cm,0).getDate();
   let h=`<div class="calhead"><button class="nav" onclick="mv(-1)">‹</button><b onclick="jump()" style="cursor:pointer">${cy}년 ${cm+1}월</b><button class="nav" onclick="mv(1)">›</button></div>
   <div class="dow">${['월','화','수','목','금','토','일'].map(d=>`<div>${d}</div>`).join('')}</div><div class="grid">`;
-  for(let i=0;i<start;i++)h+=`<div class="cell out"><div class="n">${prev-start+i+1}</div></div>`;
+  for(let i=0;i<start;i++)h+=`<div class="cell out"></div>`; // 이전 달 날짜는 표시하지 않는다
   for(let d=1;d<=days;d++){
     const ds=`${cy}-${String(cm+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`,it=ofDay(ds);
     let inner='';
