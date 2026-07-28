@@ -33,9 +33,7 @@ h1{font-size:24px;margin:8px 0 18px;letter-spacing:-.5px}
 .cell{aspect-ratio:1/1.6;background:var(--bg);border-radius:0;position:relative;overflow:hidden;border:0;padding:0}
 .cell.out{opacity:.35}
 /* 날짜 숫자는 흰 배경 위에서도, 포스터 위에서도 읽혀야 하므로 반투명 흰 칩을 깐다 */
-/* 숫자만 표시. 흰 테두리 그림자로 빈 칸(흰 배경)에서도, 포스터 위에서도 읽히게 한다 */
-.cell .n{position:absolute;top:2px;left:4px;font-size:11px;font-weight:700;color:var(--tx);z-index:2;
-  text-shadow:0 0 2px #fff,-1px 0 2px #fff,1px 0 2px #fff,0 -1px 2px #fff,0 1px 2px #fff}
+.cell .n{position:absolute;top:2px;left:4px;font-size:11px;font-weight:700;color:var(--tx);z-index:2}
 .cell .imgs{position:absolute;inset:0;display:flex}
 .cell .imgs.v{flex-direction:column}
 .cell .imgs>i{flex:1;background-size:cover;background-position:center;background-color:var(--surf2)}
@@ -136,8 +134,23 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
   <button id="t3" onclick="go(3)">더보기</button>
 </div>
 <div class="modal" id="modal"><div class="mbox" id="mbody"></div></div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+/* 엑셀 라이브러리(약 1MB)는 첫 화면에 필요 없으므로 실제로 쓸 때만 내려받는다 */
+let _xp=null;
+function loadXLSX(){
+  if(window.XLSX)return Promise.resolve();
+  return _xp||(_xp=new Promise((res,rej)=>{
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    s.onload=res;
+    s.onerror=()=>{_xp=null;rej()};
+    document.head.appendChild(s);
+  }));
+}
+async function needXLSX(){
+  try{await loadXLSX();return true}
+  catch(e){alert('엑셀 기능을 불러오지 못했습니다.\n인터넷 연결을 확인해주세요.');return false}
+}
 let DB=[],tab=0,cy=new Date().getFullYear(),cm=new Date().getMonth(),editId=null,tmpImg='';
 let q='',fOpen=false,fGenre='',fVendor='',fY='',fSort='new',limit=40,sy='all';
 const won=n=>(+n||0).toLocaleString('ko-KR');
@@ -344,8 +357,7 @@ function openForm(id,ds,copy){
   <datalist id="vl">${uniq('vendor').map(v=>`<option>${esc(v)}</option>`).join('')}</datalist>
   <label>메모</label><textarea id="f_memo">${esc(x.memo)}</textarea>
   <label>상태</label>
-  <label class="chk"><input type="checkbox" id="f_tbd" ${x.tbd?'checked':''}><span>미정 일정 (이미지를 흑백으로 표시)</span></label>
-  <button class="btn" onclick="submit()">저장</button>`);
+  <label class="chk"><input type="checkbox" id="f_tbd" ${x.tbd?'checked':''}><span>미정 일정 (이미지를 흑백으로 표시)</span></label>`);
 }
 function setT(t){document.getElementById('f_time').value=t}
 function pick(el){
@@ -437,7 +449,8 @@ async function clearAll(){
 const COLS=['공연명','날짜','시간','출연','장소','좌석','장르','금액','예매처','메모','미정'];
 // 엑셀의 미정 칸: O · ○ · V · Y · 1 · 미정 등이면 미정으로 본다(빈칸·X는 확정)
 const isTbd=v=>/^(o|○|●|v|✓|y|yes|true|1|미정|예)$/i.test(String(v??'').trim());
-function tmpl(){
+async function tmpl(){
+  if(!await needXLSX())return;
   const ws=XLSX.utils.aoa_to_sheet([COLS,
     ['레미제라블','2016-03-15','19:30','홍광호','블루스퀘어','1층 A열 12번','뮤지컬',140000,'인터파크','예시 줄입니다. 지우고 쓰세요','O'],
     ['','','','','','','','','','','']]);
@@ -486,6 +499,7 @@ function impXls(el){
   const fl=el.files[0];if(!fl)return;
   const r=new FileReader();
   r.onload=async()=>{
+    if(!await needXLSX()){el.value='';return}
     let rows;
     try{
       // cellDates를 켜면 날짜가 타임존 영향을 받으므로, 시리얼 숫자 그대로 받아 pDate/pTime에서 변환한다
@@ -538,8 +552,9 @@ function impXls(el){
   };
   r.readAsArrayBuffer(fl);
 }
-function xlsx(){
+async function xlsx(){
   if(!DB.length)return alert('기록이 없습니다');
+  if(!await needXLSX())return;
   const rows=DB.slice().sort((a,b)=>(a.date||'').localeCompare(b.date||'')).map(x=>({
     '공연명':x.title,'날짜':x.date,'시간':x.time,'출연':x.cast,'장소':x.place,
     '좌석':x.seat,'장르':x.genre,'금액':+x.price||0,'예매처':x.vendor,'메모':x.memo,'미정':x.tbd?'O':''}));
