@@ -91,13 +91,13 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .save{background:var(--acc);color:#fff;border:0;border-radius:14px;height:44px;padding:0 18px;font-size:16px;font-weight:700;font-family:inherit;flex:none}
 .x{background:var(--surf2);border:0;color:var(--tx);width:44px;height:44px;border-radius:14px;font-size:20px;flex:none}
 .card{background:var(--surf);border-radius:16px;padding:12px;margin-bottom:10px;display:flex;gap:12px;align-items:center;cursor:pointer}
-.card img{width:60px;height:60px;object-fit:cover;background:var(--surf2);flex:none}
+.card img{width:60px;height:96px;object-fit:cover;background:var(--surf2);flex:none} /* 포스터 비율 1:1.6 */
 .card .bd{min-width:0;flex:1}
 .card .t{font-size:16px;font-weight:700;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .s{font-size:13px;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card .cp{flex:none;background:var(--surf2);border:0;color:var(--tx2);border-radius:10px;padding:10px 12px;font-size:13px;font-weight:600;font-family:inherit}
 .card.det{align-items:flex-start}
-.card.det img{width:76px;height:76px}
+.card.det img{width:72px;height:115px} /* 포스터 비율 1:1.6 */
 .card.det .s{margin-top:3px;line-height:1.35}
 .card.det .cp{align-self:center}
 .card .s .k{display:inline-block;width:34px;color:var(--mut2)}
@@ -258,13 +258,13 @@ function dayTap(ds){
   open(`<div class="mtop"><b>${ds}</b><button class="x" onclick="close_()">✕</button></div>
   ${it.map(x=>card(x,1,1)).join('')}<button class="btn sub" onclick="openForm(null,'${ds}')">이 날짜에 추가</button>`);
 }
-// det=1이면 일시·출연·장소·좌석을 각각 한 줄씩 보여준다(달력 날짜 목록용)
+// det=1이면 일시·출연·장소·좌석을 각각 한 줄씩 보여준다(달력 날짜 목록용). 값이 없으면 - 로 자리를 지킨다
 function card(x,cp,det){
-  const ln=(k,v)=>v?`<div class="s"><span class="k">${k}</span>${esc(v)}</div>`:'';
+  const ln=(k,v)=>`<div class="s"><span class="k">${k}</span>${esc(v)||'-'}</div>`;
   const bd=det
-    ?`<div class="s"><span class="k">일시</span>${x.date||''} ${x.time||''}</div>
+    ?`<div class="s"><span class="k">일시</span>${((x.date||'')+' '+(x.time||'')).trim()||'-'}</div>
       ${ln('출연',x.cast)}${ln('장소',x.place)}${ln('좌석',x.seat)}`
-    :`<div class="s">${x.date||''} ${x.time||''} · ${esc(x.place)||'-'}</div>`;
+    :`<div class="s">${x.date||''} ${x.time||''} · ${esc(x.cast)||'-'}</div>`;
   return `<div class="card ${det?'det':''}" onclick="detail('${x.id}')">
     <img class="${x.tbd?'gray':''}" src="${x.img||''}" onerror="this.style.visibility='hidden'">
     <div class="bd"><div class="t">${esc(x.title)}</div>${bd}</div>
@@ -326,7 +326,7 @@ function detail(id){
   </div><button class="x" onclick="close_()">✕</button></div>
   ${x.img?`<img class="hero ${x.tbd?'gray':''}" src="${x.img}" onclick="zoom('${x.id}')">`:''}
   <div class="dtitle">${esc(x.title)}</div>
-  ${r('날짜',((x.date||'')+' '+(x.time||'')).trim())}${r('출연',x.cast)}${r('장소',x.place)}${r('좌석',x.seat)}${r('장르',x.genre)}
+  ${r('일시',((x.date||'')+' '+(x.time||'')).trim())}${r('출연',x.cast)}${r('장소',x.place)}${r('좌석',x.seat)}${r('장르',x.genre)}
   ${x.price?`<div class="row"><span>금액</span><b>${won(x.price)}원</b></div>`:''}
   ${r('예매처',x.vendor)}${r('메모',x.memo)}`);
 }
