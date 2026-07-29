@@ -184,6 +184,16 @@ let q='',fOpen=false,fGenre='',fVendor='',fY='',fSort='new',limit=40,sy='all';
 const won=n=>(+n||0).toLocaleString('ko-KR');
 // toISOString은 UTC 기준이라 새벽에 하루 밀린다. 오늘 날짜는 로컬 기준으로 만든다
 const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+// 2026-07-29 → 2026년 7월 29일 (수).  short=1이면 연도를 뺀 "7월 29일 (수)"
+const WD=['일','월','화','수','목','금','토'];
+function fmtD(s,short){
+  const m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');
+  if(!m)return s||'';
+  const d=`${+m[2]}월 ${+m[3]}일 (${WD[new Date(+m[1],+m[2]-1,+m[3]).getDay()]})`;
+  return short?d:`${+m[1]}년 ${d}`;
+}
+// 화면에 쓰는 "날짜 시간" 한 덩어리
+const fmtDT=(x,short)=>((x.date?fmtD(x.date,short):'')+' '+(x.time||'')).trim();
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 /* ---------- IndexedDB ---------- */
@@ -263,16 +273,16 @@ function dayTap(ds){
   const it=ofDay(ds);
   if(!it.length)return openForm(null,ds);
   if(it.length===1)return detail(it[0].id);
-  open(`<div class="mtop"><b>${ds}</b><button class="x" onclick="close_()">✕</button></div>
+  open(`<div class="mtop"><b>${fmtD(ds)}</b><button class="x" onclick="close_()">✕</button></div>
   ${it.map(x=>card(x,1,1)).join('')}<button class="btn sub" onclick="openForm(null,'${ds}')">이 날짜에 추가</button>`);
 }
 // det=1이면 일시·출연·장소·좌석을 각각 한 줄씩 보여준다(달력 날짜 목록용). 값이 없으면 - 로 자리를 지킨다
 function card(x,cp,det){
   const ln=(k,v)=>`<div class="s"><span class="k">${k}</span>${esc(v)||'-'}</div>`;
   const bd=det
-    ?`<div class="s"><span class="k">일시</span>${((x.date||'')+' '+(x.time||'')).trim()||'-'}</div>
+    ?`<div class="s"><span class="k">일시</span>${fmtDT(x,1)||'-'}</div>
       ${ln('출연',x.cast)}${ln('장소',x.place)}${ln('좌석',x.seat)}`
-    :`<div class="s">${((x.date||'')+' '+(x.time||'')).trim()||'-'}</div>
+    :`<div class="s">${fmtDT(x)||'-'}</div>
       <div class="s">${esc(x.cast)||'-'}</div>`;
   return `<div class="card ${det?'det':''}" onclick="detail('${x.id}')">
     <img class="${x.tbd?'gray':''}" src="${x.img||''}" onerror="this.style.visibility='hidden'">
@@ -335,7 +345,7 @@ function detail(id){
   </div><button class="x" onclick="close_()">✕</button></div>
   ${x.img?`<img class="hero ${x.tbd?'gray':''}" src="${x.img}" onclick="zoom('${x.id}')">`:''}
   <div class="dtitle">${esc(x.title)}</div>
-  ${r('일시',((x.date||'')+' '+(x.time||'')).trim())}${r('출연',x.cast)}${r('장소',x.place)}${r('좌석',x.seat)}${r('장르',x.genre)}
+  ${r('일시',fmtDT(x))}${r('출연',x.cast)}${r('장소',x.place)}${r('좌석',x.seat)}${r('장르',x.genre)}
   ${x.price?`<div class="row"><span>금액</span><b>${won(x.price)}원</b></div>`:''}
   ${r('예매처',x.vendor)}${r('메모',x.memo)}`);
 }
@@ -378,7 +388,7 @@ function openForm(id,ds,copy){
       <input id="f_time" type="time" value="${x.time||'20:00'}">
     </div></div>
   <div class="fr"><label></label>
-    <div class="qt">${['14:00','15:00','18:00','19:00'].map(t=>`<button type="button" onclick="setT('${t}')">${+t.slice(0,2)%12||12}시</button>`).join('')}</div></div>
+    <div class="qt">${['14:00','15:00','18:00','19:00'].map(t=>`<button type="button" onclick="setT('${t}')">${+t.slice(0,2)}시</button>`).join('')}</div></div>
   ${f('cast','출연','text',x.cast)}
   <div class="fr"><label>장소</label><input id="f_place" list="pl" value="${esc(x.place)}"></div>
   <datalist id="pl">${uniq('place').map(v=>`<option>${esc(v)}</option>`).join('')}</datalist>
