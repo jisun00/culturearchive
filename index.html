@@ -78,8 +78,13 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
    아래 여백을 키워 글자를 위로 올린다. 높이 조절은 --lift 한 값만 바꾸면 된다 */
 .pwa{--lift:20px}
 .pwa .tabs button{padding:16px 0 calc(22px + var(--lift))}
-.pwa body{padding-bottom:calc(88px + var(--lift))}
 .pwa .fab{bottom:calc(96px + var(--lift))}
+/* iOS 홈 화면 앱은 페이지 전체가 스크롤되면 바운스 중에 고정 요소(탭바)가 따라 움직인다.
+   본문만 스크롤되는 구조로 바꿔 탭바를 스크롤 영역 밖에 둔다 */
+.pwa,.pwa body{height:100%;overflow:hidden}
+.pwa body{padding-bottom:0} /* 아래 여백은 .wrap이 대신 가진다 */
+.pwa .wrap{height:100%;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  padding-bottom:calc(88px + var(--lift))}
 .modal{position:fixed;inset:0;background:var(--bg);z-index:100;overflow-y:auto;display:none}
 .modal.on{display:block}
 .mbox{max-width:520px;margin:0 auto;padding:20px 16px 40px}
@@ -213,7 +218,9 @@ async function load(){
   if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
   render();
 }
-function go(t){tab=t;limit=40;[0,1,2,3].forEach(i=>document.getElementById('t'+i).className=i==t?'on':'');render();window.scrollTo(0,0)}
+// 홈 화면 앱에서는 .wrap이 스크롤 컨테이너라 window가 아니라 .wrap을 올려야 한다
+function toTop(){const w=document.querySelector('.wrap');if(w)w.scrollTop=0;window.scrollTo(0,0)}
+function go(t){tab=t;limit=40;[0,1,2,3].forEach(i=>document.getElementById('t'+i).className=i==t?'on':'');render();toTop()}
 function render(){document.getElementById('app').innerHTML=[cal,list,stats,more][tab]()}
 
 /* ---------- 달력 ---------- */
@@ -617,7 +624,7 @@ function open(h){
   document.getElementById('mbody').innerHTML=h;
   m.classList.add('on');
   m.scrollTop=0; // 모달은 자체 스크롤 컨테이너라, 이전에 내려둔 위치가 그대로 남는다
-  window.scrollTo(0,0);
+  toTop();
 }
 function close_(){document.getElementById('modal').classList.remove('on')}
 
