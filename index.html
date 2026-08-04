@@ -147,6 +147,16 @@ input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appear
 .sbar input{flex:1}
 .sbar button{flex:none;width:52px;background:var(--surf2);border:0;color:var(--tx);border-radius:12px;font-size:18px}
 .sbar button.act{background:var(--acc);color:#fff}
+.sbar button.sel{font-size:14px;font-weight:600}
+/* 다중 선택 바 */
+.selbar{position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:8px;background:var(--bg);padding:8px 0 10px;margin-bottom:4px;border-bottom:1px solid var(--line2)}
+.selbar b{flex:1;min-width:0;font-size:14px;color:var(--mut);font-weight:600}
+.selbar button{flex:none;background:var(--surf2);border:0;color:var(--tx);border-radius:10px;padding:9px 12px;font-size:13px;font-weight:600;font-family:inherit}
+.selbar button.go{background:var(--acc);color:#fff}
+.selbar button:disabled{opacity:.45}
+.card.on{background:#e7eefc}
+.card .ck{flex:none;width:24px;height:24px;border:2px solid var(--line);border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff}
+.card.on .ck{background:var(--acc);border-color:var(--acc)}
 .fpanel{background:var(--surf);border-radius:16px;padding:4px 16px 16px;margin-bottom:12px;display:none}
 .fpanel.on{display:block}
 .mono{font-size:13px;color:var(--mut);margin-bottom:10px;line-height:1.6}
@@ -181,6 +191,7 @@ async function needXLSX(){
 }
 let DB=[],tab=0,cy=new Date().getFullYear(),cm=new Date().getMonth(),editId=null,tmpImg='';
 let q='',fOpen=false,fGenre='',fVendor='',fY='',fSort='new',limit=40,sy='all';
+let selMode=false,sel=new Set(); // 목록 탭 다중 선택(이미지 일괄 입력)
 const won=n=>(+n||0).toLocaleString('ko-KR');
 // toISOString은 UTC 기준이라 새벽에 하루 밀린다. 오늘 날짜는 로컬 기준으로 만든다
 const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
@@ -230,7 +241,7 @@ async function load(){
 }
 // 홈 화면 앱에서는 .wrap이 스크롤 컨테이너라 window가 아니라 .wrap을 올려야 한다
 function toTop(){const w=document.querySelector('.wrap');if(w)w.scrollTop=0;window.scrollTo(0,0)}
-function go(t){tab=t;limit=40;[0,1,2,3].forEach(i=>document.getElementById('t'+i).className=i==t?'on':'');render();toTop()}
+function go(t){tab=t;limit=40;selMode=false;sel.clear();[0,1,2,3].forEach(i=>document.getElementById('t'+i).className=i==t?'on':'');render();toTop()}
 function render(){document.getElementById('app').innerHTML=[cal,list,stats,more][tab]()}
 
 /* ---------- 달력 ---------- */
@@ -284,10 +295,12 @@ function card(x,cp,det){
       ${ln('출연',x.cast)}${ln('장소',x.place)}${ln('좌석',x.seat)}`
     :`<div class="s">${fmtDT(x)||'-'}</div>
       <div class="s">${esc(x.cast)||'-'}</div>`;
-  return `<div class="card ${det?'det':''}" onclick="detail('${x.id}')">
+  const pick=selMode&&!det, on=sel.has(x.id);
+  return `<div class="card ${det?'det':''} ${pick&&on?'on':''}" data-id="${x.id}" onclick="${pick?`togglePick('${x.id}')`:`detail('${x.id}')`}">
+    ${pick?`<div class="ck">${on?'✓':''}</div>`:''}
     <img class="${x.tbd?'gray':''}" src="${x.img||''}" onerror="this.style.visibility='hidden'">
     <div class="bd"><div class="t">${esc(x.title)}</div>${bd}</div>
-    ${cp?`<button class="cp" onclick="event.stopPropagation();openForm('${x.id}',null,1)">복사</button>`:''}</div>`;
+    ${cp&&!pick?`<button class="cp" onclick="event.stopPropagation();openForm('${x.id}',null,1)">복사</button>`:''}</div>`;
 }
 
 /* ---------- 목록 + 검색/필터 ---------- */
@@ -309,7 +322,15 @@ function list(){
   const r=filtered(),act=fGenre||fVendor||fY;
   return `<h1>목록</h1>
   <div class="sbar"><input placeholder="공연명·출연·장소·메모 검색" value="${esc(q)}" oninput="q=this.value;limit=40;redrawList()">
+  <button class="sel ${selMode?'act':''}" onclick="toggleSel()">선택</button>
   <button class="${act?'act':''}" onclick="fOpen=!fOpen;render()">⚙</button></div>
+  ${selMode?`<div class="selbar">
+    <b id="selcnt">${sel.size}개 선택</b>
+    <button onclick="pickAll()">전체</button>
+    <button onclick="selNone()">해제</button>
+    <button id="selgo" class="go" ${sel.size?'':'disabled'} onclick="document.getElementById('fbulk').click()">이미지 넣기</button>
+  </div>
+  <input id="fbulk" type="file" accept="image/*" style="display:none" onchange="bulkImg(this)">`:''}
   <div class="fpanel ${fOpen?'on':''}">
     <label>장르</label><select onchange="fGenre=this.value;limit=40;render()"><option value="">전체</option>${uniq('genre').map(g=>`<option ${fGenre===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
     <label>예매처</label><select onchange="fVendor=this.value;limit=40;render()"><option value="">전체</option>${uniq('vendor').map(g=>`<option ${fVendor===g?'selected':''}>${esc(g)}</option>`).join('')}</select>
@@ -326,6 +347,49 @@ function listBody(r){
   let h=r.slice(0,limit).map(x=>card(x,1)).join('');
   if(r.length>limit)h+=`<button class="btn sub" onclick="limit+=40;redrawList()">더 보기 (${r.length-limit}건 남음)</button>`;
   return h;
+}
+/* ---------- 다중 선택 → 이미지 일괄 입력 ---------- */
+function toggleSel(){selMode=!selMode;sel.clear();render()}
+function selNone(){sel.clear();render()}
+function pickAll(){filtered().forEach(x=>sel.add(x.id));render()}
+function togglePick(id){
+  sel.has(id)?sel.delete(id):sel.add(id);
+  const el=document.querySelector(`.card[data-id="${id}"]`);
+  if(el){el.classList.toggle('on',sel.has(id));const c=el.querySelector('.ck');if(c)c.textContent=sel.has(id)?'✓':''}
+  const n=document.getElementById('selcnt');if(n)n.textContent=sel.size+'개 선택';
+  const g=document.getElementById('selgo');if(g)g.disabled=!sel.size;
+}
+function bulkImg(el){
+  const fl=el.files[0];const ids=[...sel];
+  if(!fl||!ids.length){el.value='';return}
+  const r=new FileReader();
+  r.onload=()=>{
+    const im=new Image();
+    im.onerror=()=>{el.value='';alert('이미지를 읽을 수 없습니다')};
+    im.onload=async()=>{
+      const mx=900,sc=Math.min(1,mx/Math.max(im.width,im.height));
+      const c=document.createElement('canvas');c.width=im.width*sc|0;c.height=im.height*sc|0;
+      c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      const data=c.toDataURL('image/jpeg',.8);
+      const has=ids.filter(id=>{const x=DB.find(v=>v.id===id);return x&&x.img});
+      let msg=`${ids.length}건에 이 이미지를 넣습니다.`;
+      if(has.length)msg+=`\n\n그중 ${has.length}건에는 이미 이미지가 있습니다. 덮어씁니다.`;
+      msg+='\n\n계속할까요?';
+      if(!confirm(msg)){el.value='';return}
+      let ok=0;
+      try{
+        for(const id of ids){
+          const x=DB.find(v=>v.id===id);if(!x)continue;
+          const o=Object.assign({},x,{img:data});
+          await put(o);DB=DB.map(v=>v.id===id?o:v);ok++;
+        }
+      }catch(e){el.value='';alert(`${ok}건까지 저장한 뒤 오류가 발생했습니다.`);sel.clear();render();return}
+      el.value='';sel.clear();selMode=false;render();
+      alert(`${ok}건에 이미지를 넣었습니다.`);
+    };
+    im.src=r.result;
+  };
+  r.readAsDataURL(fl);
 }
 function redrawList(){
   const r=filtered();
